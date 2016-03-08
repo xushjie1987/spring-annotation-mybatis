@@ -6,16 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.oneapm.annotation.service.FromService;
 import com.oneapm.annotation.service.InnerService;
 import com.oneapm.annotation.service.OutterService;
-import com.oneapm.annotation.service.ToService;
 import com.oneapm.annotation.test.mapper.TblAMapper;
 import com.oneapm.annotation.test.mapper.TblBMapper;
 
 @RunWith(value = SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:META-INF/spring/beans.xml" })
-public class XMLConfigIT {
+@ContextConfiguration(classes = { MultiTransactionConfig.class })
+public class MultiConfigIT {
     
     @Autowired
     private TblAMapper    tblAMapper;
@@ -29,12 +27,6 @@ public class XMLConfigIT {
     @Autowired
     private InnerService  innerService;
     
-    @Autowired
-    private FromService   fromService;
-    
-    @Autowired
-    private ToService     toService;
-    
     @Test
     public void case_01() {
         outterService.case_01();
@@ -45,24 +37,41 @@ public class XMLConfigIT {
         outterService.case_02();
     }
     
+    /**
+     * 回滚，应该符合预期 <br>
+     */
     @Test
-    public void case_03() {
-        fromService.case_03();
+    public void multi_01() {
+        outterService.multi_01();
     }
     
+    /**
+     * 回滚，符合预期 <br>
+     */
     @Test
-    public void case_04() {
-        fromService.case_04();
+    public void multi_02() {
+        outterService.multi_02();
     }
     
+    /**
+     * 不符合预期 <br>
+     * 预期：部分提交 <br>
+     * 实际：回滚 <br>
+     * 猜测：存在bug <br>
+     */
     @Test
-    public void case_05() {
-        fromService.case_05();
+    public void multi_03() {
+        outterService.multi_03();
     }
     
+    /**
+     * 还是不符合预期 <br>
+     * 怀疑：从调用者REQUIRED传递到被调用者REQUIRES_NEW在多层事务拦截器情形下无法把事务隔离开 <br>
+     * REQUIRES_NEW事务还是传播进去了 <br>
+     */
     @Test
-    public void case_06() {
-        fromService.case_06();
+    public void multi_04() {
+        outterService.multi_04();
     }
     
 }

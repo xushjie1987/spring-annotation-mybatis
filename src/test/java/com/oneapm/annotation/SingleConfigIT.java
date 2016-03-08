@@ -10,10 +10,11 @@ import com.oneapm.annotation.service.InnerService;
 import com.oneapm.annotation.service.OutterService;
 import com.oneapm.annotation.test.mapper.TblAMapper;
 import com.oneapm.annotation.test.mapper.TblBMapper;
+import com.oneapm.tmp.SingleTransactionConfig;
 
 @RunWith(value = SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { DataSourceConfig.class })
-public class AnnotationConfigIT {
+@ContextConfiguration(classes = { SingleTransactionConfig.class })
+public class SingleConfigIT {
     
     @Autowired
     private TblAMapper    tblAMapper;
@@ -35,6 +36,32 @@ public class AnnotationConfigIT {
     @Test
     public void case_02() {
         outterService.case_02();
+    }
+    
+    /**
+     * 部分提交，符合预期 <br>
+     */
+    @Test
+    public void single_01() {
+        outterService.single_01();
+    }
+    
+    /**
+     * REQUIRED <br>
+     * 回滚，符合预期 <br>
+     */
+    @Test
+    public void single_02() {
+        outterService.single_02();
+    }
+    
+    /**
+     * REQUIRES_NEW <br>
+     * 部分提交，符合预期 <br>
+     */
+    @Test
+    public void single_03() {
+        outterService.single_03();
     }
     
 }
