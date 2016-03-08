@@ -1,17 +1,13 @@
-package com.oneapm.annotation;
+package com.oneapm.tmp;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Properties;
 
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.mapper.MapperScannerConfigurer;
-import org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -19,15 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.TransactionManagementConfigurer;
-import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 import com.alibaba.druid.pool.DruidDataSource;
 
 @Configuration
 @EnableTransactionManagement
-@EnableAspectJAutoProxy(proxyTargetClass = true)
-@ComponentScan(basePackages = { "com.oneapm" }, includeFilters = { @Filter(type = FilterType.ANNOTATION, classes = { Service.class }) })
-public class DataSourceConfig implements TransactionManagementConfigurer {
+@ComponentScan(basePackages = { "com.oneapm.annotation" }, includeFilters = { @ComponentScan.Filter(type = FilterType.ANNOTATION, value = { Service.class }) })
+public class SingleTransactionConfig implements TransactionManagementConfigurer {
     
     private String  url                           = "jdbc:mysql://127.0.0.1:3312/test?characterEncoding=utf8&amp;useUnicode=true";
     
@@ -117,54 +111,30 @@ public class DataSourceConfig implements TransactionManagementConfigurer {
         return sqlSessionFactory;
     }
     
-    private static String basePackage           = "com.oneapm.annotation.test.mapper";
-    
-    private static String sqlSessionFactoryName = "sqlSessionFactory";
+    private static String basePackage = "com.oneapm.annotation.test.mapper";
     
     @Bean
     public static MapperScannerConfigurer mapperScannerConfigurer() {
         //
         MapperScannerConfigurer mapperScannerConfigurer = new MapperScannerConfigurer();
         mapperScannerConfigurer.setBasePackage(basePackage);
-        mapperScannerConfigurer.setSqlSessionFactoryBeanName(sqlSessionFactoryName);
+        mapperScannerConfigurer.setSqlSessionFactoryBeanName("sqlSessionFactory");
         //
         return mapperScannerConfigurer;
     }
     
-    @Bean(name = "transactionManager")
-    public DataSourceTransactionManager transactionManager() {
+    @Bean(name = "txManager")
+    public PlatformTransactionManager txManager() {
         //
-        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
-        transactionManager.setDataSource(dataSource());
+        DataSourceTransactionManager txManager = new DataSourceTransactionManager();
+        txManager.setDataSource(dataSource());
         //
-        return transactionManager;
-    }
-    
-    @Bean(name = "transactionInterceptor")
-    public TransactionInterceptor transactionInterceptor() {
-        //
-        TransactionInterceptor transactionInterceptor = new TransactionInterceptor();
-        transactionInterceptor.setTransactionManager(transactionManager());
-        Properties transactionAttributes = new Properties();
-        transactionAttributes.put("*", "PROPAGATION_REQUIRED,-Exception");
-        transactionInterceptor.setTransactionAttributes(transactionAttributes);
-        //
-        return transactionInterceptor;
-    }
-    
-    @Bean
-    public BeanNameAutoProxyCreator beanNameAutoProxyCreator() {
-        //
-        BeanNameAutoProxyCreator beanNameAutoProxyCreator = new BeanNameAutoProxyCreator();
-        beanNameAutoProxyCreator.setBeanNames("tblAMapper", "tblBMapper");
-        beanNameAutoProxyCreator.setInterceptorNames("transactionInterceptor");
-        //
-        return beanNameAutoProxyCreator;
+        return txManager;
     }
     
     @Override
     public PlatformTransactionManager annotationDrivenTransactionManager() {
-        return transactionManager();
+        return txManager();
     }
     
 }
